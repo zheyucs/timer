@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>timer</title>
+    <style>
+      :root {
+        --bg: #121212;
+        --panel: #1e1e1e;
+        --panel-strong: #262626;
+        --text: #f2f2f2;
+        --muted: #a3a3a3;
+        --line: #333333;
+        --line-strong: #4a4a4a;
+      }
+
+      * { box-sizing: border-box; }
+
+      html, body {
+        margin: 0;
+        padding: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      body {
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        padding: 24px 14px;
+      }
+
+      .page {
+        width: min(760px, 100%);
+        min-height: calc(100vh - 48px);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .countdown-wrap {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .timer-block {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      h1 {
+        margin: 0 0 32px;
+        font-size: clamp(2.2rem, 4vw, 4rem);
+        font-weight: 700;
+        text-align: center;
+        line-height: 1.1;
+        color: var(--text);
+      }
+
+      .toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 6px;
+        margin-bottom: 10px;
+      }
+
+      .toolbar button,
+      .modal-actions button,
+      .close-btn {
+        background: var(--panel);
+        border: 1px solid var(--line-strong);
+        border-radius: 0;
+        color: var(--text);
+        padding: 8px 14px;
+        cursor: pointer;
+        font-size: 0.95rem;
+      }
+
+      .toolbar button:hover,
+      .modal-actions button:hover,
+      .close-btn:hover {
+        background: var(--panel-strong);
+      }
+
+      .divider {
+        border-top: 1px solid var(--line);
+        margin: 12px 0 18px;
+      }
+
+      .current {
+        text-align: center;
+        margin-bottom: 16px;
+      }
+
+      .current h2 {
+        margin: 0 0 6px;
+        font-size: 1.65rem;
+        font-weight: 700;
+        color: var(--text);
+      }
+
+      #currentTimeDisplay {
+        color: var(--muted);
+        font-size: 1.4rem;
+      }
+
+      .meta {
+        display: flex;
+        justify-content: center;
+        gap: 54px;
+        font-size: 1.53rem;
+        margin-top: 20px;
+        margin-bottom: 18px;
+        flex-wrap: wrap;
+        color: var(--muted);
+      }
+
+      .meta strong {
+        font-weight: 700;
+        color: var(--text);
+      }
+
+      .footer {
+        margin-top: 20px;
+        text-align: center;
+        font-size: 0.9rem;
+        color: var(--muted);
+      }
+
+      .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+
+      .modal-overlay.visible {
+        display: flex;
+      }
+
+      .modal {
+        width: min(560px, 100%);
+        background: var(--panel);
+        border: 1px solid var(--line-strong);
+        border-radius: 0;
+        padding: 18px 18px 12px;
+        box-shadow: 0 4px 18px rgba(0,0,0,0.5);
+      }
+
+      .modal h2 {
+        margin: 0 0 16px;
+        font-size: 1.1rem;
+        color: var(--text);
+      }
+
+      .field {
+        display: block;
+        margin-bottom: 14px;
+        font-size: 0.95rem;
+        color: var(--text);
+      }
+
+      .field input[type="text"],
+      .field input[type="number"] {
+        width: 100%;
+        margin-top: 6px;
+        padding: 7px 8px;
+        border: 1px solid var(--line-strong);
+        border-radius: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-size: 1rem;
+      }
+
+      .split {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+
+      .checkbox {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 10px 0 16px;
+        color: var(--text);
+      }
+
+      .checkbox input {
+        margin: 0;
+      }
+
+      .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+
+      .countdown {
+        display: flex;
+        align-items: baseline;
+        justify-content: center;
+        gap: 24px;
+        margin: 36px 0 42px;
+      }
+
+      .countdown-segment {
+        display: flex;
+        align-items: baseline;
+        gap: 9px;
+      }
+
+      .countdown-value {
+        font-size: clamp(3.75rem, 12vw, 8.25rem);
+        font-weight: 700;
+        line-height: 0.9;
+        font-variant-numeric: tabular-nums;
+        color: var(--text);
+      }
+
+      .countdown-label {
+        font-size: clamp(1.3rem, 3.2vw, 2.1rem);
+        font-weight: 400;
+        opacity: 0.7;
+        color: var(--muted);
+      }
+
+      .timer-controls {
+        margin-top: 27px;
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+      }
+
+      .timer-btn {
+        background: var(--panel);
+        border: 1px solid var(--line-strong);
+        border-radius: 0;
+        color: var(--text);
+        padding: 14px 30px;
+        cursor: pointer;
+        font-size: clamp(1.1rem, 2.2vw, 1.6rem);
+        font-family: inherit;
+      }
+
+      .timer-btn:hover {
+        background: var(--panel-strong);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+
+      <div class="toolbar">
+        <button id="setupBtn" type="button">Setup</button>
+        <button id="resetBtn" type="button">Reset</button>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="countdown-wrap">
+        <div class="timer-block">
+          <h1 id="examTitleHeader"></h1>
+
+          <div id="timerCard">
+            <div class="current">
+            <h2>Current</h2>
+            <div id="currentTimeDisplay">10:20 am</div>
+          </div>
+
+          <div id="countdown" class="countdown">
+            <div class="countdown-segment" id="hoursSegment">
+                <span class="countdown-value" id="hoursValue">1</span><span class="countdown-label">h</span>
+            </div>
+            <div class="countdown-segment">
+                <span class="countdown-value" id="minutesValue">00</span><span class="countdown-label">min</span>
+            </div>
+            <div class="countdown-segment">
+                <span class="countdown-value" id="secondsValue">00</span><span class="countdown-label">s</span>
+            </div>
+          </div>
+
+          <div class="meta">
+            <div>Start: <strong id="startTimeDisplay">9:00 AM</strong></div>
+            <div>End: <strong id="endTimeDisplay">9:25 AM</strong></div>
+          </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="setupOverlay" class="modal-overlay" aria-hidden="true">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="setupTitle">
+        <h2 id="setupTitle">Setup</h2>
+
+        <label class="field">
+          Exam title (optional)
+          <input id="examTitleInput" type="text" placeholder="" />
+        </label>
+
+        <div class="split">
+          <label class="field">
+            Length of exam hours
+            <input id="hoursInput" type="number" min="0" max="99" value="0" />
+          </label>
+
+          <label class="field">
+            minutes
+            <input id="minutesInput" type="number" min="0" max="59" value="25" />
+          </label>
+        </div>
+
+
+        <div class="modal-actions">
+          <button id="saveSettingsBtn" type="button">OK</button>
+          <button id="closeModalBtn" type="button">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="/index.js"></script>
+  </body>
+</html>
